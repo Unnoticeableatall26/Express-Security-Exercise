@@ -1,23 +1,23 @@
-// === Exercice 7 - Gestion des utilisateurs enregistrés ===
+// === Exercice 7 & 8 - Répertoire utilisateur en mémoire ===
 
 const registeredUsers = [
   { email: "alice@example.com", password: "1234" },
   { email: "bob@example.com", password: "5678" },
 ];
 
-// Retourne tous les utilisateurs
+// Retourne la liste des utilisateurs enregistrés
 function getRegisteredUsers() {
   return registeredUsers;
 }
 
-// Vérifie si un email/mot de passe correspond à un utilisateur inscrit
+// Vérifie les identifiants d'un utilisateur
 function checkCredentials(email, password) {
   return registeredUsers.some(
     (user) => user.email === email && user.password === password
   );
 }
 
-// Pourrait être utilisé plus tard pour ajouter des utilisateurs
+// Ajoute un nouvel utilisateur à la liste
 function newUserRegistered(email, password) {
   registeredUsers.push({ email, password });
 }

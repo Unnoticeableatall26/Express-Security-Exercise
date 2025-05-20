@@ -1,24 +1,26 @@
-// === Exercice 6 - Authentification naïve (1 seul utilisateur) ===
-// === Exercice 7 - Authentification multi-utilisateur avec token par utilisateur ===
+// === Exercice 7 - Auth multi-utilisateur avec token ===
+// === Exercice 8 - Enregistrement utilisateur (sans hash) ===
 
 const express = require("express");
 const { v4: uuidv4 } = require("uuid");
-const { getRegisteredUsers, checkCredentials } = require("./inMemoryUserRepository");
+const {
+  getRegisteredUsers,
+  checkCredentials,
+  newUserRegistered,
+} = require("./inMemoryUserRepository");
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 
-// === Variables globales ===
 const authenticatedUsers = {}; // { token: { email } }
 
-// === Middleware de log des headers (inchangé) ===
 app.use((req, res, next) => {
   console.log("Headers de la requête :", req.headers);
   next();
 });
 
-// === Middleware pare-feu générique ===
+// Middleware pare-feu
 const unprotectedUrls = ["/hello", "/authenticate", "/register"];
 
 app.use((req, res, next) => {
@@ -26,23 +28,22 @@ app.use((req, res, next) => {
   const token = req.headers["authorization"];
 
   if (unprotectedUrls.includes(url)) {
-    return next(); // route publique
+    return next();
   }
 
-  // Vérifie si le token appartient à un utilisateur connecté
   if (token && authenticatedUsers[token]) {
-    return next(); // token valide → accès autorisé
+    return next();
   }
 
   return res.status(403).json({ error: "Accès refusé - token invalide" });
 });
 
-// === Routes publiques ===
+// Route publique
 app.get("/hello", (req, res) => {
   res.send("<h1>hello</h1>");
 });
 
-// === Routes restreintes ===
+// Routes protégées
 app.get("/restricted1", (req, res) => {
   res.json({ message: "topsecret" });
 });
@@ -51,7 +52,7 @@ app.get("/restricted2", (req, res) => {
   res.send("<h1>Admin space</h1>");
 });
 
-// === Authentification utilisateur (Exo 7) ===
+// Authentification
 app.post("/authenticate", (req, res) => {
   const { email, password } = req.body;
 
@@ -62,6 +63,20 @@ app.post("/authenticate", (req, res) => {
   const token = uuidv4();
   authenticatedUsers[token] = { email };
   res.json({ token });
+});
+
+// === Exercice 8 : Route d'inscription ===
+app.post("/register", (req, res) => {
+  const { email, password } = req.body;
+
+  // Vérifie que l'email n'est pas déjà enregistré
+  const userExists = getRegisteredUsers().some((user) => user.email === email);
+  if (userExists) {
+    return res.status(400).json({ error: "Utilisateur déjà enregistré" });
+  }
+
+  newUserRegistered(email, password);
+  res.status(201).json({ message: "Utilisateur enregistré avec succès" });
 });
 
 app.listen(PORT, () => {
